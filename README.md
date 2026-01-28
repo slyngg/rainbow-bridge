@@ -1,36 +1,108 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Rainbow Bridge - AI-Powered Sovereign Bridge
 
-## Getting Started
+An Intelligence Platform that connects Slack and Microsoft Teams channels via isolated Docker containers, while building institutional memory with RAG-powered search and analysis.
 
-First, run the development server:
+## Features
+
+- **Seamless Bridge**: Connect Slack ↔ Teams channels with matterbridge
+- **Institutional Memory**: Every message is vectorized and stored in PostgreSQL with pgvector
+- **RAG-Powered Chat**: Ask questions about your project history across both platforms
+- **Sovereign Control**: Your data stays on your infrastructure in isolated containers
+
+## Architecture
+
+```
+Slack ─────┐                    ┌───── Teams
+           │                    │
+           ▼                    ▼
+      ┌─────────────────────────────┐
+      │     Matterbridge (Docker)   │
+      │   ┌───────────────────┐     │
+      │   │ API Intelligence  │─────┼──► POST /api/webhooks/ingest
+      │   │     Layer         │     │
+      │   └───────────────────┘     │
+      └─────────────────────────────┘
+                                    │
+                                    ▼
+                          ┌─────────────────┐
+                          │  Next.js App    │
+                          │  ┌───────────┐  │
+                          │  │ Embedding │  │
+                          │  │  OpenAI   │  │
+                          │  └───────────┘  │
+                          └────────┬────────┘
+                                   │
+                                   ▼
+                          ┌─────────────────┐
+                          │   PostgreSQL    │
+                          │   + pgvector    │
+                          └─────────────────┘
+```
+
+## Quick Start
+
+### 1. Start PostgreSQL with pgvector
+
+```bash
+docker-compose up -d
+```
+
+### 2. Configure Environment
+
+Copy `.env` and add your credentials:
+
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/rainbow?schema=public"
+OPENAI_API_KEY="sk-your-openai-api-key"
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+```
+
+### 3. Initialize Database
+
+```bash
+npx prisma generate
+npx prisma db push
+```
+
+### 4. Run Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Creating a Bridge
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Go to Dashboard → Create Bridge
+2. Enter Slack credentials (Bot Token, Channel)
+3. Enter Teams credentials (App ID, Secret, Tenant ID, Team ID, Channel)
+4. Click Deploy to start the matterbridge container
 
-## Learn More
+## Docker Networking Note
 
-To learn more about Next.js, take a look at the following resources:
+The matterbridge container needs to POST messages back to the Next.js app. The configuration uses:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+extra_hosts: ['host.docker.internal:host-gateway']
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This allows the container to reach `http://host.docker.internal:3000/api/webhooks/ingest`
 
-## Deploy on Vercel
+## Tech Stack
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Frontend**: Next.js 15 (App Router), Tailwind CSS, Vercel AI SDK
+- **Backend**: Next.js Server Actions
+- **Database**: PostgreSQL with pgvector extension (via Prisma)
+- **LLM/AI**: OpenAI GPT-4o, text-embedding-3-small
+- **Orchestration**: Docker (dockerode)
+- **Bridge Engine**: 42wim/matterbridge
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## API Endpoints
+
+- `POST /api/webhooks/ingest` - Receives messages from matterbridge containers
+- `POST /api/chat` - Streaming RAG chat endpoint for the intelligence UI
+
+## License
+
+MIT
