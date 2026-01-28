@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stripe, PLANS, PlanType } from "@/lib/stripe";
+import { getStripe, PLANS, PlanType } from "@/lib/stripe";
 import { prisma } from "@/lib/db";
 import Stripe from "stripe";
 
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     let event: Stripe.Event;
 
     try {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      event = getStripe().webhooks.constructEvent(body, signature, webhookSecret);
     } catch (err) {
       console.error("Webhook signature verification failed:", err);
       return NextResponse.json(
@@ -86,7 +86,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   let subscriptionStatus = "active";
   if (subscriptionId) {
     try {
-      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      const subscription = await getStripe().subscriptions.retrieve(subscriptionId);
       subscriptionStatus = subscription.status;
     } catch (e) {
       console.error("Failed to retrieve subscription:", e);

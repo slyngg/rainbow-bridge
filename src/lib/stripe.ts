@@ -1,13 +1,20 @@
 import Stripe from "stripe";
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  console.warn("Warning: STRIPE_SECRET_KEY is not set");
-}
+// Lazy-load Stripe client to avoid build-time errors when env vars aren't set
+let _stripe: Stripe | null = null;
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  apiVersion: "2025-01-27.acacia" as any, // forcing any to bypass version mismatch for now
-  typescript: true,
-});
+export function getStripe(): Stripe {
+  if (!_stripe) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error("STRIPE_SECRET_KEY is not set");
+    }
+    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: "2025-01-27.acacia" as any, // forcing any to bypass version mismatch for now
+      typescript: true,
+    });
+  }
+  return _stripe;
+}
 
 export const PLANS = {
   FREELANCER: {
@@ -54,7 +61,7 @@ export async function createCheckoutSession({
     throw new Error(`Price ID not configured for plan: ${planType}`);
   }
 
-  const session = await stripe.checkout.sessions.create({
+  const session = await getStripe().checkout.sessions.create({
     mode: "subscription",
     payment_method_types: ["card"],
     customer_email: userEmail,
@@ -88,7 +95,7 @@ export async function createBillingPortalSession({
   customerId: string;
   returnUrl: string;
 }): Promise<Stripe.BillingPortal.Session> {
-  const session = await stripe.billingPortal.sessions.create({
+  const session = await getStripe().billingPortal.sessions.create({
     customer: customerId,
     return_url: returnUrl,
   });
@@ -98,7 +105,7 @@ export async function createBillingPortalSession({
 
 export async function getSubscription(subscriptionId: string): Promise<Stripe.Subscription | null> {
   try {
-    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    const subscription = await getStripe().subscriptions.retrieve(subscriptionId);
     return subscription;
   } catch {
     return null;
@@ -106,7 +113,7 @@ export async function getSubscription(subscriptionId: string): Promise<Stripe.Su
 }
 
 export async function cancelSubscription(subscriptionId: string): Promise<Stripe.Subscription> {
-  const subscription = await stripe.subscriptions.cancel(subscriptionId);
+  const subscription = await getStripe().subscriptions.cancel(subscriptionId);
   return subscription;
 }
 

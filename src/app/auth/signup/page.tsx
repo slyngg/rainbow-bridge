@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Rainbow, Mail, Lock, User, ArrowRight, Loader2 } from "lucide-react";
 
-export default function SignUpPage() {
+function SignUpForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/subscribe";
@@ -213,5 +213,17 @@ export default function SignUpPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-indigo-500/5 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+      </div>
+    }>
+      <SignUpForm />
+    </Suspense>
   );
 }

@@ -4,14 +4,11 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
+import { authConfig } from "@/lib/auth.config";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(prisma) as any,
-  session: { strategy: "jwt" },
-  pages: {
-    signIn: "/auth/signin",
-    newUser: "/subscribe",
-  },
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -55,6 +52,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
+    ...authConfig.callbacks,
     async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
@@ -81,16 +79,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       
       return token;
-    },
-    async session({ session, token }) {
-      if (token && session.user) {
-        session.user.id = token.id as string;
-        session.user.subscriptionStatus = token.subscriptionStatus as string | null;
-        session.user.subscriptionPlan = token.subscriptionPlan as string | null;
-        session.user.trialEndsAt = token.trialEndsAt as string | null;
-        session.user.hasUsedTrial = token.hasUsedTrial as boolean;
-      }
-      return session;
     },
   },
 });

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { stripe, PLANS } from "@/lib/stripe";
+import { getStripe, PLANS } from "@/lib/stripe";
 
 export async function POST(request: NextRequest) {
   try {
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
       ? Math.floor(user.trialEndsAt.getTime() / 1000)
       : undefined;
 
-    const checkoutSession = await stripe.checkout.sessions.create({
+    const checkoutSession = await getStripe().checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
       customer_email: user.email,
