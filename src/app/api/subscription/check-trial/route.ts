@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
+    const { userId } = await auth();
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
     // Check if user has already used trial
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { clerkId: userId },
       select: { hasUsedTrial: true },
     });
 

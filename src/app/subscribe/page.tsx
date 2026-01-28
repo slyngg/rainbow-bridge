@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { useSession } from "next-auth/react";
+import { useUser } from "@clerk/nextjs";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Rainbow, Check, Sparkles, Loader2, ArrowLeft } from "lucide-react";
@@ -34,7 +34,7 @@ const PLANS: Record<string, { name: string; price: number; description: string; 
 };
 
 function SubscribeForm() {
-  const { data: session, status, update } = useSession();
+  const { user, isLoaded } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedPlan = searchParams.get("plan");
@@ -67,23 +67,14 @@ function SubscribeForm() {
       }
     };
 
-    if (status === "authenticated") {
-      // Check if user already has subscription
-      if (
-        session?.user?.subscriptionStatus === "active" ||
-        (session?.user?.subscriptionStatus === "trialing" &&
-          session?.user?.trialEndsAt &&
-          new Date(session.user.trialEndsAt) > new Date())
-      ) {
-        router.push("/dashboard");
-        return;
-      }
+    if (isLoaded && user) {
+      // TODO: Check subscription status from database
       checkTrialEligibility();
     }
-  }, [status, session, router, canUseTrialParam]);
+  }, [isLoaded, user, router, canUseTrialParam]);
 
   const handleSubscribe = async (withTrial: boolean) => {
-    if (!session?.user?.id) return;
+    if (!user?.id) return;
 
     setIsLoading(true);
 
@@ -103,8 +94,7 @@ function SubscribeForm() {
         // Redirect to Stripe checkout
         window.location.href = data.url;
       } else if (data.success && data.trial) {
-        // Trial started successfully, refresh session and redirect
-        await update();
+        // Trial started successfully, redirect to dashboard
         router.push("/dashboard");
       } else {
         console.error("Subscription error:", data.error);
@@ -116,7 +106,7 @@ function SubscribeForm() {
     }
   };
 
-  if (status === "loading" || checkingTrial) {
+  if (!isLoaded || checkingTrial) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-indigo-500/5 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />

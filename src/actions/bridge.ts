@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { auth } from "@clerk/nextjs/server";
 import type { Bridge } from "@prisma/client";
 import { 
   generateTomlConfig, 
@@ -18,14 +18,14 @@ import { revalidatePath } from "next/cache";
 import { v4 as uuidv4 } from "uuid";
 
 async function getAuthenticatedUser() {
-  const session = await auth();
+  const { userId } = await auth();
   
-  if (!session?.user?.id) {
+  if (!userId) {
     throw new Error("Unauthorized");
   }
   
   const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
+    where: { clerkId: userId },
   });
   
   if (!user) {

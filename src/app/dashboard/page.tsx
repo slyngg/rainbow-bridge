@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { useSession, signOut } from "next-auth/react";
+import { useUser, useClerk } from "@clerk/nextjs";
 import Link from "next/link";
 import { BridgeCard } from "@/components/bridge/bridge-card";
 import { CreateBridgeDialog } from "@/components/bridge/create-bridge-dialog";
@@ -19,7 +19,8 @@ interface Bridge {
 }
 
 export default function DashboardPage() {
-  const { data: session } = useSession();
+  const { user, isLoaded } = useUser();
+  const { signOut } = useClerk();
   const [bridges, setBridges] = useState<Bridge[]>([]);
   const [isPending, startTransition] = useTransition();
 
@@ -34,9 +35,10 @@ export default function DashboardPage() {
     loadBridges();
   }, []);
 
-  const isTrialing = session?.user?.subscriptionStatus === "trialing";
-  const trialEndsAt = session?.user?.trialEndsAt ? new Date(session.user.trialEndsAt) : null;
-  const daysLeft = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0;
+  // TODO: Fetch subscription data from database using user.id
+  const isTrialing = false;
+  const trialEndsAt = null;
+  const daysLeft = 0;
 
   const handleDeploy = async (id: string) => {
     startTransition(async () => {
@@ -97,13 +99,13 @@ export default function DashboardPage() {
             <CreateBridgeDialog onCreated={loadBridges} />
             <div className="flex items-center gap-2 pl-3 border-l border-border">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-medium">{session?.user?.name || session?.user?.email}</p>
+                <p className="text-sm font-medium">{user?.fullName || user?.primaryEmailAddress?.emailAddress}</p>
                 <p className="text-xs text-muted-foreground capitalize">
-                  {session?.user?.subscriptionPlan?.toLowerCase() || "Free"} Plan
+                  Free Plan
                 </p>
               </div>
               <button
-                onClick={() => signOut({ callbackUrl: "/" })}
+                onClick={() => signOut({ redirectUrl: "/" })}
                 className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
                 title="Sign out"
               >
