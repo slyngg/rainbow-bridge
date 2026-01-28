@@ -99,8 +99,8 @@ function PricingCard({
             <div className={`
         h-full p-8 rounded-2xl backdrop-blur-xl border transition-all flex flex-col
         ${featured
-                    ? 'bg-gradient-to-b from-indigo-500/10 to-cyan-500/10 border-indigo-500/30 shadow-xl shadow-indigo-500/10 scale-105'
-                    : 'bg-secondary/30 dark:bg-white/5 border-border/50 dark:border-white/10 hover:border-border dark:hover:border-white/20'
+                    ? 'bg-gradient-to-b from-indigo-500/5 to-cyan-500/5 border-indigo-500/20 shadow-xl shadow-indigo-500/10 scale-105'
+                    : 'bg-white dark:bg-white/5 border-border/50 dark:border-white/10 hover:border-border dark:hover:border-white/20 shadow-sm dark:shadow-none'
                 }
       `}>
                 <h3 className="text-lg font-semibold mb-2">{tier}</h3>

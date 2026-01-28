@@ -7,7 +7,7 @@ export function CTA() {
             <div className="container mx-auto px-4">
                 <div className="relative max-w-3xl mx-auto">
                     <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-cyan-500/20 rounded-3xl blur-xl" />
-                    <div className="relative p-8 md:p-12 rounded-3xl bg-secondary/30 dark:bg-white/5 border border-border/50 dark:border-white/10 backdrop-blur-xl text-center">
+                    <div className="relative p-8 md:p-12 rounded-3xl bg-white dark:bg-white/5 border border-border/50 dark:border-white/10 backdrop-blur-xl text-center shadow-lg dark:shadow-none">
                         <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to bridge the gap?</h2>
                         <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
                             Join agencies and teams who&apos;ve eliminated guest accounts and built institutional memory.

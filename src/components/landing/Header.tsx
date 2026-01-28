@@ -21,15 +21,12 @@ export function Header() {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            Pricing
-          </a>
           <ThemeToggle />
           {status === "loading" ? (
             <div className="w-24 h-9 rounded-lg bg-secondary animate-pulse" />
           ) : session ? (
             <div className="flex items-center gap-3">
-              <Link 
+              <Link
                 href="/dashboard"
                 className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-indigo-500 to-cyan-500 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all hover:scale-105"
               >
@@ -46,13 +43,13 @@ export function Header() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <Link 
+              <Link
                 href="/auth/signin"
                 className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 Sign In
               </Link>
-              <Link 
+              <Link
                 href="/auth/signup"
                 className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-indigo-500 to-cyan-500 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all hover:scale-105"
               >

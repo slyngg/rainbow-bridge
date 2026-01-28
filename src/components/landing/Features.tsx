@@ -52,7 +52,7 @@ export function Features() {
 
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
     return (
-        <div className="p-6 rounded-xl bg-secondary/30 dark:bg-white/5 border border-border/50 dark:border-white/10 hover:border-border dark:hover:border-white/20 transition-all hover:bg-secondary/50 dark:hover:bg-white/[0.07] group">
+        <div className="p-6 rounded-xl bg-white dark:bg-white/5 border border-border/50 dark:border-white/10 hover:border-border dark:hover:border-white/20 transition-all hover:shadow-md dark:hover:bg-white/[0.07] group shadow-sm dark:shadow-none">
             <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-indigo-500/20 to-cyan-500/20 flex items-center justify-center mb-4 text-indigo-400 group-hover:text-cyan-400 transition-colors">
                 {icon}
             </div>

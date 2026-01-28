@@ -46,7 +46,7 @@ export function Hero() {
                     {/* Visual: Split Screen Slack | AI Brain | Teams */}
                     <div className="relative max-w-3xl mx-auto">
                         <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 via-cyan-500/20 to-indigo-500/20 rounded-3xl blur-xl" />
-                        <div className="relative grid grid-cols-1 md:grid-cols-3 gap-4 p-4 md:p-8 rounded-3xl bg-secondary/30 dark:bg-white/5 border border-border/50 dark:border-white/10 backdrop-blur-xl">
+                        <div className="relative grid grid-cols-1 md:grid-cols-3 gap-4 p-4 md:p-8 rounded-3xl bg-white/50 dark:bg-white/5 border border-border/50 dark:border-white/10 backdrop-blur-xl shadow-lg dark:shadow-none">
                             {/* Slack Side */}
                             <div className="p-6 rounded-2xl bg-[#4A154B]/20 border border-[#4A154B]/30">
                                 <Slack className="w-10 h-10 text-[#E01E5A] mx-auto mb-3" />

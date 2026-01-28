@@ -8,10 +8,11 @@ Complete setup guide for connecting Slack and Microsoft Teams with AI-powered in
 
 1. [Prerequisites](#prerequisites)
 2. [Phase 1: Validate the Intelligence Layer](#phase-1-validate-the-intelligence-layer)
-3. [Phase 2: Slack Configuration](#phase-2-slack-configuration)
-4. [Phase 3: Microsoft Teams / Azure AD Configuration](#phase-3-microsoft-teams--azure-ad-configuration)
-5. [Phase 4: Environment Variables](#phase-4-environment-variables)
-6. [Troubleshooting](#troubleshooting)
+3. [Phase 2: Authentication Setup (Google OAuth)](#phase-2-authentication-setup-google-oauth)
+4. [Phase 3: Slack Configuration](#phase-3-slack-configuration)
+5. [Phase 4: Microsoft Teams / Azure AD Configuration](#phase-4-microsoft-teams--azure-ad-configuration)
+6. [Phase 5: Environment Variables](#phase-5-environment-variables)
+7. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -95,16 +96,85 @@ Go to your bridge's chat interface at `http://localhost:3000/dashboard/bridge/[B
 
 ---
 
-## Phase 2: Slack Configuration
+## Phase 2: Authentication Setup (Google OAuth)
 
-### 2.1 Create a Slack App
+Rainbow Bridge uses NextAuth.js for authentication. Users can sign up/sign in with email/password or Google OAuth.
+
+### 2.1 Create Google OAuth Credentials
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com)
+2. Create a new project or select an existing one
+3. Navigate to **APIs & Services** → **Credentials**
+4. Click **Create Credentials** → **OAuth client ID**
+
+### 2.2 Configure OAuth Consent Screen
+
+If prompted, configure the consent screen first:
+
+1. Go to **APIs & Services** → **OAuth consent screen**
+2. Select **External** (or Internal for Google Workspace)
+3. Fill in required fields:
+   - **App name:** `Rainbow Bridge`
+   - **User support email:** Your email
+   - **Developer contact:** Your email
+4. Click **Save and Continue**
+5. Skip Scopes (defaults are sufficient)
+6. Add test users if in testing mode
+7. Click **Save and Continue**
+
+### 2.3 Create OAuth Client ID
+
+1. Go back to **Credentials** → **Create Credentials** → **OAuth client ID**
+2. Select **Web application**
+3. Configure:
+   - **Name:** `Rainbow Bridge Web`
+   - **Authorized JavaScript origins:**
+     - `http://localhost:3000` (development)
+     - `https://your-domain.com` (production)
+   - **Authorized redirect URIs:**
+     - `http://localhost:3000/api/auth/callback/google` (development)
+     - `https://your-domain.com/api/auth/callback/google` (production)
+4. Click **Create**
+5. Copy the **Client ID** and **Client Secret**
+
+### 2.4 Generate Auth Secret
+
+Generate a secure secret for NextAuth:
+
+```bash
+openssl rand -base64 32
+```
+
+Copy the output for your `AUTH_SECRET` environment variable.
+
+### 2.5 Configure Environment Variables
+
+Add to your `.env.local`:
+
+```env
+# NextAuth
+AUTH_SECRET="your-generated-secret-from-step-2.4"
+AUTH_URL="http://localhost:3000"
+
+# Google OAuth
+GOOGLE_CLIENT_ID="your-client-id.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="your-client-secret"
+```
+
+✅ **Google OAuth is now configured. Users can sign up and sign in with their Google accounts.**
+
+---
+
+## Phase 3: Slack Configuration
+
+### 3.1 Create a Slack App
 
 1. Go to [api.slack.com/apps](https://api.slack.com/apps)
 2. Click **Create New App** → **From scratch**
 3. Name it `Rainbow Bridge` and select your workspace
 4. Click **Create App**
 
-### 2.2 Configure Bot Token Scopes
+### 3.2 Configure Bot Token Scopes
 
 Navigate to **OAuth & Permissions** → **Scopes** → **Bot Token Scopes** and add:
 
@@ -117,21 +187,21 @@ Navigate to **OAuth & Permissions** → **Scopes** → **Bot Token Scopes** and 
 | `groups:history` | Read messages in private channels (if needed) |
 | `groups:read` | View private channel info (if needed) |
 
-### 2.3 Install to Workspace
+### 3.3 Install to Workspace
 
 1. Go to **OAuth & Permissions**
 2. Click **Install to Workspace**
 3. Authorize the permissions
 4. Copy the **Bot User OAuth Token** (starts with `xoxb-`)
 
-### 2.4 Get Channel ID
+### 3.4 Get Channel ID
 
 1. Open Slack in your browser
 2. Navigate to the channel you want to bridge
 3. The URL will be: `https://app.slack.com/client/TXXXXXXXX/CXXXXXXXXX`
 4. The **Channel ID** is the `CXXXXXXXXX` part
 
-### 2.5 Configure in Rainbow Bridge
+### 3.5 Configure in Rainbow Bridge
 
 In your bridge configuration:
 - **Slack Token:** `xoxb-your-token-here`
@@ -140,11 +210,11 @@ In your bridge configuration:
 
 ---
 
-## Phase 3: Microsoft Teams / Azure AD Configuration
+## Phase 4: Microsoft Teams / Azure AD Configuration
 
 This is the most complex part. Follow each step carefully.
 
-### 3.1 Register an Azure AD Application
+### 4.1 Register an Azure AD Application
 
 1. Go to [Azure Portal](https://portal.azure.com)
 2. Navigate to **Azure Active Directory** → **App registrations**
@@ -155,7 +225,7 @@ This is the most complex part. Follow each step carefully.
    - **Redirect URI:** Leave blank for now
 5. Click **Register**
 
-### 3.2 Note Your IDs
+### 4.2 Note Your IDs
 
 After registration, note these values from the **Overview** page:
 
@@ -164,7 +234,7 @@ After registration, note these values from the **Overview** page:
 | **Application (client) ID** | Overview page, top section |
 | **Directory (tenant) ID** | Overview page, top section |
 
-### 3.3 Create Client Secret
+### 4.3 Create Client Secret
 
 1. Go to **Certificates & secrets**
 2. Click **New client secret**
@@ -173,7 +243,7 @@ After registration, note these values from the **Overview** page:
 5. Click **Add**
 6. **IMMEDIATELY** copy the **Value** (you won't see it again!)
 
-### 3.4 Configure API Permissions (The "Golden" Permissions)
+### 4.4 Configure API Permissions (The "Golden" Permissions)
 
 Navigate to **API permissions** → **Add a permission** → **Microsoft Graph** → **Application permissions**
 
@@ -187,7 +257,7 @@ Add these permissions:
 | `Team.ReadBasic.All` | Application | Read team info |
 | `Channel.ReadBasic.All` | Application | Read channel info |
 
-### 3.5 Grant Admin Consent
+### 4.5 Grant Admin Consent
 
 1. Still on **API permissions** page
 2. Click **Grant admin consent for [Your Organization]**
@@ -195,7 +265,7 @@ Add these permissions:
 
 ⚠️ **You must be a Global Admin or have permission to grant admin consent.**
 
-### 3.6 Get Team and Channel IDs
+### 4.6 Get Team and Channel IDs
 
 **Option A: Using Graph Explorer**
 
@@ -212,7 +282,7 @@ Add these permissions:
 2. Click **Get link to channel**
 3. The URL contains encoded IDs - decode them
 
-### 3.7 Configure in Rainbow Bridge
+### 4.7 Configure in Rainbow Bridge
 
 In your bridge configuration:
 - **Teams App ID:** Application (client) ID from Azure
@@ -223,13 +293,21 @@ In your bridge configuration:
 
 ---
 
-## Phase 4: Environment Variables
+## Phase 5: Environment Variables
 
 Create a `.env.local` file in the project root:
 
 ```env
 # Database
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/rainbow?schema=public"
+
+# NextAuth
+AUTH_SECRET="generate-with-openssl-rand-base64-32"
+AUTH_URL="http://localhost:3000"
+
+# Google OAuth (optional but recommended)
+GOOGLE_CLIENT_ID="your-client-id.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="your-client-secret"
 
 # OpenAI
 OPENAI_API_KEY="sk-your-openai-key"
