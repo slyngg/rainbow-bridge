@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { useSession, signOut } from "next-auth/react";
+import Link from "next/link";
 import { BridgeCard } from "@/components/bridge/bridge-card";
 import { CreateBridgeDialog } from "@/components/bridge/create-bridge-dialog";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { getBridges, deployBridge, stopBridgeAction, deleteBridge } from "@/actions/bridge";
-import { Rainbow, Zap } from "lucide-react";
+import { Rainbow, Zap, User, LogOut, CreditCard, Clock } from "lucide-react";
 
 interface Bridge {
   id: string;
@@ -16,6 +19,7 @@ interface Bridge {
 }
 
 export default function DashboardPage() {
+  const { data: session } = useSession();
   const [bridges, setBridges] = useState<Bridge[]>([]);
   const [isPending, startTransition] = useTransition();
 
@@ -29,6 +33,10 @@ export default function DashboardPage() {
   useEffect(() => {
     loadBridges();
   }, []);
+
+  const isTrialing = session?.user?.subscriptionStatus === "trialing";
+  const trialEndsAt = session?.user?.trialEndsAt ? new Date(session.user.trialEndsAt) : null;
+  const daysLeft = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0;
 
   const handleDeploy = async (id: string) => {
     startTransition(async () => {
@@ -55,17 +63,54 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-500/5">
       <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
+        {isTrialing && (
+          <div className="bg-gradient-to-r from-indigo-500/10 to-cyan-500/10 border-b border-indigo-500/20">
+            <div className="container mx-auto px-4 py-2 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm">
+                <Clock className="w-4 h-4 text-indigo-500" />
+                <span>
+                  <strong>{daysLeft} days</strong> left in your free trial
+                </span>
+              </div>
+              <Link
+                href="/subscribe"
+                className="text-sm font-medium text-indigo-500 hover:text-indigo-400 flex items-center gap-1"
+              >
+                <CreditCard className="w-4 h-4" />
+                Upgrade now
+              </Link>
+            </div>
+          </div>
+        )}
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center">
               <Rainbow className="w-6 h-6 text-white" />
             </div>
             <div>
               <h1 className="text-xl font-bold">Rainbow Bridge</h1>
               <p className="text-xs text-muted-foreground">AI-Powered Sovereign Bridge</p>
             </div>
+          </Link>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <CreateBridgeDialog onCreated={loadBridges} />
+            <div className="flex items-center gap-2 pl-3 border-l border-border">
+              <div className="text-right hidden sm:block">
+                <p className="text-sm font-medium">{session?.user?.name || session?.user?.email}</p>
+                <p className="text-xs text-muted-foreground capitalize">
+                  {session?.user?.subscriptionPlan?.toLowerCase() || "Free"} Plan
+                </p>
+              </div>
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                title="Sign out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-          <CreateBridgeDialog onCreated={loadBridges} />
         </div>
       </header>
 

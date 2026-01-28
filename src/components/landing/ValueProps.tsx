@@ -2,7 +2,7 @@ import { Lock, Server, Search } from "lucide-react";
 
 export function ValueProps() {
     return (
-        <section className="py-16 md:py-24 border-t border-white/5">
+        <section className="py-16 md:py-24 border-t border-border/50">
             <div className="container mx-auto px-4">
                 <div className="grid md:grid-cols-3 gap-8">
                     <ValueProp
@@ -38,7 +38,7 @@ function ValueProp({ icon, title, description, gradient }: {
     return (
         <div className="relative group h-full">
             <div className={`absolute inset-0 bg-gradient-to-r ${gradient} rounded-2xl blur-xl opacity-0 group-hover:opacity-20 transition-opacity`} />
-            <div className="relative p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm hover:border-white/20 transition-colors h-full flex flex-col">
+            <div className="relative p-8 rounded-2xl bg-secondary/30 dark:bg-white/5 border border-border/50 dark:border-white/10 backdrop-blur-sm hover:border-border dark:hover:border-white/20 transition-colors h-full flex flex-col">
                 <div className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${gradient} flex items-center justify-center mb-6 text-white shadow-lg shrink-0`}>
                     {icon}
                 </div>

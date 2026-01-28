@@ -19,6 +19,7 @@ import {
   Slack,
   Users
 } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { 
   getBridges, 
   getBridgeStats, 
@@ -143,7 +144,8 @@ export default function BridgeDetailPage({ params }: { params: Promise<{ id: str
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
               {bridge.status === "STOPPED" || bridge.status === "ERROR" ? (
                 <Button onClick={handleDeploy} disabled={isPending}>
                   <Play className="w-4 h-4 mr-2" />

@@ -11,7 +11,7 @@ export function Hero() {
 
             <div className="container mx-auto px-4 py-16 md:py-24 relative">
                 <div className="text-center max-w-4xl mx-auto">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm mb-8 backdrop-blur-sm">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/50 border border-border/50 text-sm mb-8 backdrop-blur-sm">
                         <Sparkles className="w-4 h-4 text-cyan-400" />
                         <span className="text-muted-foreground">AI-Powered Communication Bridge</span>
                     </div>
@@ -29,7 +29,7 @@ export function Hero() {
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
                         <Link
-                            href="/dashboard"
+                            href="/auth/signup?plan=freelancer"
                             className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-indigo-500 to-cyan-500 px-8 py-4 text-base font-semibold text-white shadow-xl shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all hover:scale-105"
                         >
                             Start Free Trial
@@ -37,7 +37,7 @@ export function Hero() {
                         </Link>
                         <a
                             href="#how-it-works"
-                            className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 px-8 py-4 text-base font-medium hover:bg-white/10 transition-colors backdrop-blur-sm"
+                            className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg border border-border bg-secondary/50 px-8 py-4 text-base font-medium hover:bg-secondary transition-colors backdrop-blur-sm"
                         >
                             See How It Works
                         </a>
@@ -46,15 +46,15 @@ export function Hero() {
                     {/* Visual: Split Screen Slack | AI Brain | Teams */}
                     <div className="relative max-w-3xl mx-auto">
                         <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 via-cyan-500/20 to-indigo-500/20 rounded-3xl blur-xl" />
-                        <div className="relative grid grid-cols-1 md:grid-cols-3 gap-4 p-4 md:p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl">
+                        <div className="relative grid grid-cols-1 md:grid-cols-3 gap-4 p-4 md:p-8 rounded-3xl bg-secondary/30 dark:bg-white/5 border border-border/50 dark:border-white/10 backdrop-blur-xl">
                             {/* Slack Side */}
                             <div className="p-6 rounded-2xl bg-[#4A154B]/20 border border-[#4A154B]/30">
                                 <Slack className="w-10 h-10 text-[#E01E5A] mx-auto mb-3" />
                                 <p className="text-sm font-medium text-center">Slack</p>
                                 <div className="mt-4 space-y-2">
-                                    <div className="h-2 bg-white/10 rounded animate-pulse" />
-                                    <div className="h-2 bg-white/10 rounded w-3/4 animate-pulse" style={{ animationDelay: '0.1s' }} />
-                                    <div className="h-2 bg-white/10 rounded w-1/2 animate-pulse" style={{ animationDelay: '0.2s' }} />
+                                    <div className="h-2 bg-muted rounded animate-pulse" />
+                                    <div className="h-2 bg-muted rounded w-3/4 animate-pulse" style={{ animationDelay: '0.1s' }} />
+                                    <div className="h-2 bg-muted rounded w-1/2 animate-pulse" style={{ animationDelay: '0.2s' }} />
                                 </div>
                             </div>
 
@@ -76,9 +76,9 @@ export function Hero() {
                                 </svg>
                                 <p className="text-sm font-medium text-center">Teams</p>
                                 <div className="mt-4 space-y-2">
-                                    <div className="h-2 bg-white/10 rounded animate-pulse" style={{ animationDelay: '0.3s' }} />
-                                    <div className="h-2 bg-white/10 rounded w-3/4 animate-pulse" style={{ animationDelay: '0.4s' }} />
-                                    <div className="h-2 bg-white/10 rounded w-1/2 animate-pulse" style={{ animationDelay: '0.5s' }} />
+                                    <div className="h-2 bg-muted rounded animate-pulse" style={{ animationDelay: '0.3s' }} />
+                                    <div className="h-2 bg-muted rounded w-3/4 animate-pulse" style={{ animationDelay: '0.4s' }} />
+                                    <div className="h-2 bg-muted rounded w-1/2 animate-pulse" style={{ animationDelay: '0.5s' }} />
                                 </div>
                             </div>
                         </div>

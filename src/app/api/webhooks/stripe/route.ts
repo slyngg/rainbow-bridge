@@ -82,18 +82,29 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   const plan = PLANS[planType];
 
+  // Get subscription to check if it's trialing
+  let subscriptionStatus = "active";
+  if (subscriptionId) {
+    try {
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      subscriptionStatus = subscription.status;
+    } catch (e) {
+      console.error("Failed to retrieve subscription:", e);
+    }
+  }
+
   await prisma.user.update({
     where: { id: userId },
     data: {
       stripeCustomerId: customerId,
       stripeSubscriptionId: subscriptionId,
-      subscriptionStatus: "active",
+      subscriptionStatus,
       subscriptionPlan: planType,
       bridgeLimit: plan.bridgeLimit ?? 999,
     },
   });
 
-  console.log(`User ${userId} subscribed to ${planType} plan`);
+  console.log(`User ${userId} subscribed to ${planType} plan with status ${subscriptionStatus}`);
 }
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {

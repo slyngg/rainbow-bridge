@@ -27,7 +27,7 @@ export function Pricing() {
                             "Email support",
                         ]}
                         cta="Start Free Trial"
-                        href="/dashboard"
+                        href="/auth/signup?plan=freelancer"
                     />
 
                     {/* Agency - Featured */}
@@ -42,8 +42,8 @@ export function Pricing() {
                             "Priority support",
                             "Custom bridge names",
                         ]}
-                        cta="Start Free Trial"
-                        href="/dashboard"
+                        cta="Get Started"
+                        href="/auth/signup?plan=agency"
                         featured
                     />
 
@@ -100,7 +100,7 @@ function PricingCard({
         h-full p-8 rounded-2xl backdrop-blur-xl border transition-all flex flex-col
         ${featured
                     ? 'bg-gradient-to-b from-indigo-500/10 to-cyan-500/10 border-indigo-500/30 shadow-xl shadow-indigo-500/10 scale-105'
-                    : 'bg-white/5 border-white/10 hover:border-white/20'
+                    : 'bg-secondary/30 dark:bg-white/5 border-border/50 dark:border-white/10 hover:border-border dark:hover:border-white/20'
                 }
       `}>
                 <h3 className="text-lg font-semibold mb-2">{tier}</h3>
@@ -131,7 +131,7 @@ function PricingCard({
             block text-center py-3 px-6 rounded-lg font-medium transition-all mt-auto
             ${featured
                             ? 'bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-105'
-                            : 'bg-white/10 hover:bg-white/20'
+                            : 'bg-secondary hover:bg-secondary/80 dark:bg-white/10 dark:hover:bg-white/20'
                         }
           `}
                 >

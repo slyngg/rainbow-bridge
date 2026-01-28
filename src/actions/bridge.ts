@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { auth } from "@/lib/auth";
+import type { Bridge } from "@prisma/client";
 import { 
   generateTomlConfig, 
   createBridgeContainer, 
@@ -15,28 +17,26 @@ import {
 import { revalidatePath } from "next/cache";
 import { v4 as uuidv4 } from "uuid";
 
-const DEMO_USER_ID = "demo-user-001";
-
-async function ensureDemoUser() {
-  let user = await prisma.user.findUnique({
-    where: { id: DEMO_USER_ID },
+async function getAuthenticatedUser() {
+  const session = await auth();
+  
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+  
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
   });
   
   if (!user) {
-    user = await prisma.user.create({
-      data: {
-        id: DEMO_USER_ID,
-        email: "demo@rainbow-bridge.dev",
-        name: "Demo User",
-      },
-    });
+    throw new Error("User not found");
   }
   
   return user;
 }
 
 export async function createBridge(formData: FormData) {
-  const user = await ensureDemoUser();
+  const user = await getAuthenticatedUser();
   
   const name = formData.get("name") as string;
   const slackToken = formData.get("slackToken") as string;
@@ -213,7 +213,7 @@ export async function deleteBridge(bridgeId: string) {
 }
 
 export async function getBridges() {
-  const user = await ensureDemoUser();
+  const user = await getAuthenticatedUser();
   
   const bridges = await prisma.bridge.findMany({
     where: { userId: user.id },
@@ -222,7 +222,7 @@ export async function getBridges() {
   
   // Update statuses from Docker
   const bridgesWithStatus = await Promise.all(
-    bridges.map(async (bridge) => {
+    bridges.map(async (bridge: Bridge) => {
       if (bridge.containerId) {
         const dockerStatus = await getContainerStatus(bridge.containerId);
         
@@ -293,7 +293,7 @@ export async function getBridgeStats(bridgeId: string) {
   
   return {
     totalMessages: messageCount,
-    platformBreakdown: platformCounts.reduce((acc, item) => {
+    platformBreakdown: platformCounts.reduce((acc: Record<string, number>, item: { platform: string; _count: number }) => {
       acc[item.platform] = item._count;
       return acc;
     }, {} as Record<string, number>),
