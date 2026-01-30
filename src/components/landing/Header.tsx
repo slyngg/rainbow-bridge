@@ -1,5 +1,26 @@
 "use client";
 
+/* ╔═══════════════════════════════════════════════════════════════════════════╗
+   ║                                                                           ║
+   ║   🚀 MOGUL WATERMARK - Breathing Glow Effect                              ║
+   ║   ─────────────────────────────────────────────────────────────────────   ║
+   ║   Copy this entire block to add the Mogul watermark to any project.       ║
+   ║                                                                           ║
+   ║   HTML Usage:                                                             ║
+   ║   <a href="https://corecrm.us/" class="mogul-watermark">                  ║
+   ║     <span class="built-by">built by</span>                                ║
+   ║     <span class="mogul-text">mogul</span>                                 ║
+   ║   </a>                                                                    ║
+   ║                                                                           ║
+   ║   Features:                                                               ║
+   ║   • Breathing blue glow animation (3s cycle)                              ║
+   ║   • Light mode: black "built by" text                                     ║
+   ║   • Dark mode: white "built by" text with glow                            ║
+   ║   • Respects prefers-reduced-motion                                       ║
+   ║   • Mogul Blue: #1877F2                                                   ║
+   ║                                                                           ║
+   ╚═══════════════════════════════════════════════════════════════════════════╝ */
+
 import Link from "next/link";
 import {
   SignInButton,
@@ -13,17 +34,63 @@ import { ThemeToggle } from "../theme-toggle";
 
 export function Header() {
   return (
-    <header className="border-b border-border/50 bg-background/80 backdrop-blur-xl sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
-            <Rainbow className="w-6 h-6 text-white" />
+    <>
+      <style jsx global>{`
+        @keyframes mogul-breathe {
+          0%, 100% {
+            text-shadow: 0 0 4px rgba(24, 119, 242, 0.6),
+                         0 0 8px rgba(24, 119, 242, 0.4),
+                         0 0 12px rgba(24, 119, 242, 0.2);
+          }
+          50% {
+            text-shadow: 0 0 8px rgba(24, 119, 242, 0.8),
+                         0 0 16px rgba(24, 119, 242, 0.6),
+                         0 0 24px rgba(24, 119, 242, 0.4),
+                         0 0 32px rgba(24, 119, 242, 0.2);
+          }
+        }
+        .mogul-watermark {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.25rem;
+          text-decoration: none;
+          transition: opacity 0.2s ease;
+        }
+        .mogul-watermark:hover {
+          opacity: 0.8;
+        }
+        .mogul-watermark .built-by {
+          font-size: 0.75rem;
+          color: var(--foreground);
+          opacity: 0.6;
+        }
+        .mogul-watermark .mogul-text {
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: #1877F2;
+          animation: mogul-breathe 3s ease-in-out infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .mogul-watermark .mogul-text {
+            animation: none;
+            text-shadow: 0 0 8px rgba(24, 119, 242, 0.6);
+          }
+        }
+      `}</style>
+      <header className="border-b border-border/50 bg-background/80 backdrop-blur-xl sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+              <Rainbow className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">Rainbow Bridge</h1>
+              <a href="https://corecrm.us/" className="mogul-watermark" target="_blank" rel="noopener noreferrer">
+                <span className="built-by">built by</span>
+                <span className="mogul-text">mogul</span>
+              </a>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">Rainbow Bridge</h1>
-            <p className="text-xs text-muted-foreground">by Mogul</p>
-          </div>
-        </div>
         <div className="flex items-center gap-4">
           <ThemeToggle />
           <SignedIn>
@@ -56,5 +123,6 @@ export function Header() {
         </div>
       </div>
     </header>
+    </>
   );
 }

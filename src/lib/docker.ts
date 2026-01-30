@@ -1,9 +1,26 @@
 import Docker from "dockerode";
 import { v4 as uuidv4 } from "uuid";
 
-const docker = new Docker();
-
 const MATTERBRIDGE_IMAGE = "42wim/matterbridge:latest";
+
+// Lazy-load Docker to avoid errors on serverless (Vercel)
+let _docker: Docker | null = null;
+
+function getDocker(): Docker {
+  if (!_docker) {
+    _docker = new Docker();
+  }
+  return _docker;
+}
+
+export function isDockerAvailable(): boolean {
+  try {
+    getDocker();
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export interface BridgeConfig {
   id: string;
@@ -66,6 +83,7 @@ enable=true
 }
 
 export async function pullImage(): Promise<void> {
+  const docker = getDocker();
   return new Promise((resolve, reject) => {
     docker.pull(MATTERBRIDGE_IMAGE, (err: Error | null, stream: NodeJS.ReadableStream) => {
       if (err) {
@@ -88,11 +106,12 @@ export async function createBridgeContainer(
   config: BridgeConfig,
   tomlContent: string
 ): Promise<string> {
+  const docker = getDocker();
   const containerName = `rainbow-bridge-${config.id}`;
   
   // Check if container already exists
   const containers = await docker.listContainers({ all: true });
-  const existing = containers.find(c => c.Names.includes(`/${containerName}`));
+  const existing = containers.find((c: { Names: string[] }) => c.Names.includes(`/${containerName}`));
   
   if (existing) {
     // Remove existing container
@@ -139,17 +158,17 @@ export async function createBridgeContainer(
 }
 
 export async function startContainer(containerId: string): Promise<void> {
-  const container = docker.getContainer(containerId);
+  const container = getDocker().getContainer(containerId);
   await container.start();
 }
 
 export async function stopContainer(containerId: string): Promise<void> {
-  const container = docker.getContainer(containerId);
+  const container = getDocker().getContainer(containerId);
   await container.stop();
 }
 
 export async function removeContainer(containerId: string): Promise<void> {
-  const container = docker.getContainer(containerId);
+  const container = getDocker().getContainer(containerId);
   try {
     await container.stop();
   } catch {
@@ -160,7 +179,7 @@ export async function removeContainer(containerId: string): Promise<void> {
 
 export async function getContainerStatus(containerId: string): Promise<string> {
   try {
-    const container = docker.getContainer(containerId);
+    const container = getDocker().getContainer(containerId);
     const info = await container.inspect();
     return info.State.Status;
   } catch {
@@ -169,7 +188,7 @@ export async function getContainerStatus(containerId: string): Promise<string> {
 }
 
 export async function getContainerLogs(containerId: string, tail: number = 100): Promise<string> {
-  const container = docker.getContainer(containerId);
+  const container = getDocker().getContainer(containerId);
   const logs = await container.logs({
     stdout: true,
     stderr: true,
@@ -182,7 +201,7 @@ export async function getContainerLogs(containerId: string, tail: number = 100):
 
 export async function getContainerPort(containerId: string): Promise<number | null> {
   try {
-    const container = docker.getContainer(containerId);
+    const container = getDocker().getContainer(containerId);
     const info = await container.inspect();
     const portBindings = info.NetworkSettings.Ports["4000/tcp"];
     

@@ -1,7 +1,7 @@
 import { openai } from "@ai-sdk/openai";
 import { streamText } from "ai";
 import { prisma } from "@/lib/db";
-import { generateEmbedding } from "@/lib/openai";
+import { generateEmbedding, MOCK_MODE } from "@/lib/openai";
 
 export const maxDuration = 30;
 
@@ -22,6 +22,49 @@ interface RetrievedMessage {
   timestamp: Date;
 }
 
+function generateMockStreamResponse(userMessage: string, hasContext: boolean): ReadableStream {
+  const encoder = new TextEncoder();
+  
+  let response: string;
+  if (hasContext) {
+    response = `Based on the conversation history, I found relevant discussions about "${userMessage.slice(0, 40)}..."
+
+The team has been actively communicating across both Slack and Teams. Several messages relate to your query.
+
+**Key Findings:**
+- Multiple team members have contributed to this topic
+- There are ongoing discussions that may be relevant
+- Action items appear to be tracked across platforms
+
+🎭 *This is a mock response. Set a real OPENAI_API_KEY to enable AI-powered answers.*`;
+  } else {
+    response = `I don't have any messages in the bridge history yet.
+
+Once messages start flowing through your bridge (Slack ↔ Teams), I'll be able to:
+- Search across all conversations
+- Find decisions and who made them
+- Track responsibilities and action items
+- Summarize project discussions
+
+🎭 *Mock mode active - deploy a bridge and send some test messages to see the intelligence layer in action!*`;
+  }
+
+  const words = response.split(" ");
+  let index = 0;
+
+  return new ReadableStream({
+    async pull(controller) {
+      if (index < words.length) {
+        await new Promise(r => setTimeout(r, 30));
+        controller.enqueue(encoder.encode(words[index] + " "));
+        index++;
+      } else {
+        controller.close();
+      }
+    },
+  });
+}
+
 export async function POST(req: Request) {
   const { messages, bridgeId }: ChatRequest = await req.json();
   
@@ -29,11 +72,9 @@ export async function POST(req: Request) {
     return new Response("Bridge ID required", { status: 400 });
   }
   
-  // Get the latest user message
   const lastMessage = messages[messages.length - 1];
   const userMessage = typeof lastMessage?.content === "string" ? lastMessage.content : "";
   
-  // Generate embedding and search for relevant context
   let contextLogs = "";
   
   try {
@@ -62,6 +103,12 @@ export async function POST(req: Request) {
     }
   } catch (error) {
     console.error("Error retrieving context:", error);
+  }
+  
+  if (MOCK_MODE) {
+    return new Response(generateMockStreamResponse(userMessage, contextLogs.length > 0), {
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
+    });
   }
   
   const systemPrompt = contextLogs
