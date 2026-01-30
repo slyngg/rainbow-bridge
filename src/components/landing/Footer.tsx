@@ -10,7 +10,10 @@ export function Footer() {
                             <Rainbow className="w-4 h-4 text-white" />
                         </div>
                         <span className="font-semibold">Rainbow Bridge</span>
-                        <span className="text-muted-foreground text-sm">by Mogul</span>
+                        <a href="https://corecrm.us/" className="mogul-watermark" target="_blank" rel="noopener noreferrer">
+                            <span className="built-by">built by</span>
+                            <span className="mogul-text">mogul</span>
+                        </a>
                     </div>
                     <p className="text-sm text-muted-foreground">
                         © 2026 Mogul. All rights reserved.
