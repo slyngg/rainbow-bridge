@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { Check } from "lucide-react";
+import { SignUpButton, useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 export function Pricing() {
     return (
@@ -27,7 +31,7 @@ export function Pricing() {
                             "Email support",
                         ]}
                         cta="Start Free Trial"
-                        href="/auth/signup?plan=freelancer"
+                        plan="freelancer"
                     />
 
                     {/* Agency - Featured */}
@@ -43,7 +47,7 @@ export function Pricing() {
                             "Custom bridge names",
                         ]}
                         cta="Get Started"
-                        href="/auth/signup?plan=agency"
+                        plan="agency"
                         featured
                     />
 
@@ -76,6 +80,7 @@ function PricingCard({
     description,
     features,
     cta,
+    plan,
     href,
     featured = false,
     enterprise = false
@@ -85,10 +90,28 @@ function PricingCard({
     description: string;
     features: string[];
     cta: string;
-    href: string;
+    plan?: string;
+    href?: string;
     featured?: boolean;
     enterprise?: boolean;
 }) {
+    const { isSignedIn } = useAuth();
+    const router = useRouter();
+    
+    const buttonClass = `
+        block text-center py-3 px-6 rounded-lg font-medium transition-all mt-auto w-full
+        ${featured
+            ? 'bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-105'
+            : 'bg-secondary hover:bg-secondary/80 dark:bg-white/10 dark:hover:bg-white/20'
+        }
+    `;
+    
+    const handleClick = () => {
+        if (isSignedIn) {
+            router.push("/dashboard");
+        }
+    };
+
     return (
         <div className={`relative group flex flex-col ${featured ? 'z-10' : ''}`}>
             {featured && (
@@ -125,18 +148,21 @@ function PricingCard({
                     ))}
                 </ul>
 
-                <Link
-                    href={href}
-                    className={`
-            block text-center py-3 px-6 rounded-lg font-medium transition-all mt-auto
-            ${featured
-                            ? 'bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-105'
-                            : 'bg-secondary hover:bg-secondary/80 dark:bg-white/10 dark:hover:bg-white/20'
-                        }
-          `}
-                >
-                    {cta}
-                </Link>
+                {href ? (
+                    <Link href={href} className={buttonClass}>
+                        {cta}
+                    </Link>
+                ) : isSignedIn ? (
+                    <button onClick={handleClick} className={buttonClass}>
+                        {cta}
+                    </button>
+                ) : (
+                    <SignUpButton mode="modal" forceRedirectUrl="/dashboard">
+                        <button className={buttonClass}>
+                            {cta}
+                        </button>
+                    </SignUpButton>
+                )}
             </div>
         </div>
     );

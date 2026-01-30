@@ -24,12 +24,19 @@ async function getAuthenticatedUser() {
     throw new Error("Unauthorized");
   }
   
-  const user = await prisma.user.findUnique({
+  // Find or create user (handles case where webhook hasn't fired yet)
+  let user = await prisma.user.findUnique({
     where: { clerkId: userId },
   });
   
   if (!user) {
-    throw new Error("User not found");
+    // Auto-create user if they authenticated with Clerk but don't exist in DB yet
+    user = await prisma.user.create({
+      data: {
+        clerkId: userId,
+        email: `${userId}@placeholder.local`, // Will be updated by webhook
+      },
+    });
   }
   
   return user;

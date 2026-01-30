@@ -1,7 +1,13 @@
-import Link from "next/link";
+"use client";
+
 import { Sparkles, ArrowRight, Slack, Brain } from "lucide-react";
+import { SignUpButton, useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 export function Hero() {
+    const { isSignedIn } = useAuth();
+    const router = useRouter();
+
     return (
         <section className="relative overflow-hidden">
             {/* Background Effects */}
@@ -28,13 +34,22 @@ export function Hero() {
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-                        <Link
-                            href="/auth/signup?plan=freelancer"
-                            className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-indigo-500 to-cyan-500 px-8 py-4 text-base font-semibold text-white shadow-xl shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all hover:scale-105"
-                        >
-                            Start Free Trial
-                            <ArrowRight className="w-5 h-5 ml-2" />
-                        </Link>
+                        {isSignedIn ? (
+                            <button
+                                onClick={() => router.push("/dashboard")}
+                                className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-indigo-500 to-cyan-500 px-8 py-4 text-base font-semibold text-white shadow-xl shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all hover:scale-105"
+                            >
+                                Go to Dashboard
+                                <ArrowRight className="w-5 h-5 ml-2" />
+                            </button>
+                        ) : (
+                            <SignUpButton mode="modal" forceRedirectUrl="/dashboard">
+                                <button className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-indigo-500 to-cyan-500 px-8 py-4 text-base font-semibold text-white shadow-xl shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all hover:scale-105">
+                                    Start Free Trial
+                                    <ArrowRight className="w-5 h-5 ml-2" />
+                                </button>
+                            </SignUpButton>
+                        )}
                         <a
                             href="#how-it-works"
                             className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg border border-border bg-secondary/50 px-8 py-4 text-base font-medium hover:bg-secondary transition-colors backdrop-blur-sm"
