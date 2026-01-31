@@ -2,12 +2,13 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useUser, useClerk } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { BridgeCard } from "@/components/bridge/bridge-card";
 import { CreateBridgeDialog } from "@/components/bridge/create-bridge-dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { getBridges, deployBridge, stopBridgeAction, deleteBridge } from "@/actions/bridge";
-import { Rainbow, Zap, User, LogOut, CreditCard, Clock } from "lucide-react";
+import { Rainbow, Zap, User, LogOut, CreditCard, Clock, Loader2 } from "lucide-react";
 
 interface Bridge {
   id: string;
@@ -18,11 +19,23 @@ interface Bridge {
   createdAt: Date;
 }
 
+interface SubscriptionStatus {
+  hasActiveSubscription: boolean;
+  status: string | null;
+  plan: string | null;
+  isTrialing: boolean;
+  trialEndsAt: string | null;
+  daysLeft: number;
+}
+
 export default function DashboardPage() {
   const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
+  const router = useRouter();
   const [bridges, setBridges] = useState<Bridge[]>([]);
   const [isPending, startTransition] = useTransition();
+  const [subscription, setSubscription] = useState<SubscriptionStatus | null>(null);
+  const [checkingSubscription, setCheckingSubscription] = useState(true);
 
   const loadBridges = () => {
     startTransition(async () => {
@@ -32,13 +45,34 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    loadBridges();
-  }, []);
+    const checkSubscription = async () => {
+      try {
+        const res = await fetch("/api/subscription/status");
+        const data = await res.json();
+        
+        if (!data.hasActiveSubscription) {
+          router.push("/subscribe");
+          return;
+        }
+        
+        setSubscription(data);
+      } catch (error) {
+        console.error("Failed to check subscription:", error);
+        router.push("/subscribe");
+      } finally {
+        setCheckingSubscription(false);
+      }
+    };
 
-  // TODO: Fetch subscription data from database using user.id
-  const isTrialing = false;
-  const trialEndsAt = null;
-  const daysLeft = 0;
+    if (isLoaded && user) {
+      checkSubscription();
+      loadBridges();
+    }
+  }, [isLoaded, user, router]);
+
+  const isTrialing = subscription?.isTrialing ?? false;
+  const daysLeft = subscription?.daysLeft ?? 0;
+  const planName = subscription?.plan ?? "Free";
 
   const handleDeploy = async (id: string) => {
     startTransition(async () => {
@@ -61,6 +95,14 @@ export default function DashboardPage() {
       loadBridges();
     });
   };
+
+  if (checkingSubscription || !subscription) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-500/5 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-500/5">
@@ -101,7 +143,7 @@ export default function DashboardPage() {
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-medium">{user?.fullName || user?.primaryEmailAddress?.emailAddress}</p>
                 <p className="text-xs text-muted-foreground capitalize">
-                  Free Plan
+                  {isTrialing ? "Trial" : planName} Plan
                 </p>
               </div>
               <button

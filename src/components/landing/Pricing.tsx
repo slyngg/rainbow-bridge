@@ -157,7 +157,7 @@ function PricingCard({
                         {cta}
                     </button>
                 ) : (
-                    <SignUpButton mode="modal" forceRedirectUrl="/dashboard">
+                    <SignUpButton mode="modal" forceRedirectUrl="/subscribe">
                         <button className={buttonClass}>
                             {cta}
                         </button>

@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Rainbow, Check, Sparkles, Loader2, ArrowLeft } from "lucide-react";
+import { Rainbow, Check, Loader2, ArrowLeft, CreditCard } from "lucide-react";
 
 const PLANS: Record<string, { name: string; price: number; description: string; features: string[]; popular?: boolean }> = {
   FREELANCER: {
@@ -38,42 +38,37 @@ function SubscribeForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedPlan = searchParams.get("plan");
-  const canUseTrialParam = searchParams.get("canUseTrial");
 
   const [selectedPlan, setSelectedPlan] = useState<"FREELANCER" | "AGENCY">(
     (preselectedPlan?.toUpperCase() as "FREELANCER" | "AGENCY") || "FREELANCER"
   );
   const [isLoading, setIsLoading] = useState(false);
-  const [canUseTrial, setCanUseTrial] = useState(true);
-  const [checkingTrial, setCheckingTrial] = useState(true);
+  const [checkingSubscription, setCheckingSubscription] = useState(true);
 
   useEffect(() => {
-    // Check trial eligibility on mount
-    const checkTrialEligibility = async () => {
-      if (canUseTrialParam !== null) {
-        setCanUseTrial(canUseTrialParam === "true");
-        setCheckingTrial(false);
-        return;
-      }
-
+    const checkSubscription = async () => {
       try {
-        const res = await fetch("/api/subscription/check-trial");
-        const data = await res.json();
-        setCanUseTrial(data.canUseTrial);
-      } catch {
-        setCanUseTrial(false);
+        // Check if user already has active subscription
+        const statusRes = await fetch("/api/subscription/status");
+        const statusData = await statusRes.json();
+        
+        if (statusData.hasActiveSubscription) {
+          router.push("/dashboard");
+          return;
+        }
+      } catch (error) {
+        console.error("Failed to check subscription:", error);
       } finally {
-        setCheckingTrial(false);
+        setCheckingSubscription(false);
       }
     };
 
     if (isLoaded && user) {
-      // TODO: Check subscription status from database
-      checkTrialEligibility();
+      checkSubscription();
     }
-  }, [isLoaded, user, router, canUseTrialParam]);
+  }, [isLoaded, user, router]);
 
-  const handleSubscribe = async (withTrial: boolean) => {
+  const handleSubscribe = async () => {
     if (!user?.id) return;
 
     setIsLoading(true);
@@ -84,7 +79,6 @@ function SubscribeForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           planType: selectedPlan,
-          withTrial: withTrial && canUseTrial,
         }),
       });
 
@@ -93,9 +87,6 @@ function SubscribeForm() {
       if (data.url) {
         // Redirect to Stripe checkout
         window.location.href = data.url;
-      } else if (data.success && data.trial) {
-        // Trial started successfully, redirect to dashboard
-        router.push("/dashboard");
       } else {
         console.error("Subscription error:", data.error);
         setIsLoading(false);
@@ -106,7 +97,7 @@ function SubscribeForm() {
     }
   };
 
-  if (!isLoaded || checkingTrial) {
+  if (!isLoaded || checkingSubscription) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-indigo-500/5 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
@@ -136,9 +127,7 @@ function SubscribeForm() {
             Choose your plan
           </h1>
           <p className="text-muted-foreground max-w-lg mx-auto">
-            {canUseTrial && selectedPlan === "FREELANCER"
-              ? "Start with a 7-day free trial. No credit card required."
-              : "Select the plan that works best for you."}
+            Select the plan that works best for you.
           </p>
         </div>
 
@@ -202,53 +191,28 @@ function SubscribeForm() {
         </div>
 
         <div className="bg-card border border-border/50 rounded-2xl p-8 text-center">
-          {canUseTrial && selectedPlan === "FREELANCER" ? (
-            <>
-              <div className="flex items-center justify-center gap-2 mb-4">
-                <Sparkles className="w-5 h-5 text-yellow-500" />
-                <span className="font-semibold">7-Day Free Trial</span>
-              </div>
-              <p className="text-muted-foreground mb-6">
-                Try Rainbow Bridge free for 7 days. After your trial ends,
-                you&apos;ll be charged ${PLANS[selectedPlan].price}/month.
-              </p>
-              <button
-                onClick={() => handleSubscribe(true)}
-                disabled={isLoading}
-                className="inline-flex items-center justify-center gap-2 py-3 px-8 rounded-lg bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-medium shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <>
-                    Start Free Trial
-                    <Sparkles className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-            </>
-          ) : (
-            <>
-              <p className="text-muted-foreground mb-6">
-                {!canUseTrial
-                  ? "You've already used your free trial. "
-                  : ""}
-                Get started with {PLANS[selectedPlan].name} for $
-                {PLANS[selectedPlan].price}/month.
-              </p>
-              <button
-                onClick={() => handleSubscribe(false)}
-                disabled={isLoading}
-                className="inline-flex items-center justify-center gap-2 py-3 px-8 rounded-lg bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-medium shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <>Subscribe Now</>
-                )}
-              </button>
-            </>
-          )}
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <CreditCard className="w-5 h-5 text-indigo-500" />
+            <span className="font-semibold">Secure Payment via Stripe</span>
+          </div>
+          <p className="text-muted-foreground mb-6">
+            Get started with {PLANS[selectedPlan].name} for $
+            {PLANS[selectedPlan].price}/month.
+          </p>
+          <button
+            onClick={handleSubscribe}
+            disabled={isLoading}
+            className="inline-flex items-center justify-center gap-2 py-3 px-8 rounded-lg bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-medium shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <>
+                Continue to Payment
+                <CreditCard className="w-4 h-4" />
+              </>
+            )}
+          </button>
         </div>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">

@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { planType, withTrial } = body;
+    const { planType } = body;
 
     if (!planType || !["FREELANCER", "AGENCY"].includes(planType)) {
       return NextResponse.json(
@@ -37,55 +37,6 @@ export async function POST(request: NextRequest) {
 
     const plan = PLANS[planType as keyof typeof PLANS];
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-
-    // Handle free trial for Freelancer plan
-    if (withTrial && planType === "FREELANCER") {
-      // Check IP-based trial eligibility
-      const ip = request.headers.get("x-forwarded-for")?.split(",")[0] || 
-                 request.headers.get("x-real-ip") || 
-                 "unknown";
-
-      const existingTrialByIP = await prisma.trialByIP.findUnique({
-        where: { ipAddress: ip },
-      });
-
-      if (existingTrialByIP || user.hasUsedTrial) {
-        return NextResponse.json(
-          { error: "Trial already used" },
-          { status: 400 }
-        );
-      }
-
-      // Start free trial (7 days)
-      const trialEndsAt = new Date();
-      trialEndsAt.setDate(trialEndsAt.getDate() + 7);
-
-      await prisma.$transaction([
-        prisma.user.update({
-          where: { id: user.id },
-          data: {
-            subscriptionStatus: "trialing",
-            subscriptionPlan: planType,
-            trialStartedAt: new Date(),
-            trialEndsAt,
-            hasUsedTrial: true,
-            bridgeLimit: plan.bridgeLimit ?? 1,
-          },
-        }),
-        prisma.trialByIP.create({
-          data: {
-            ipAddress: ip,
-            userId: user.id,
-          },
-        }),
-      ]);
-
-      return NextResponse.json({
-        success: true,
-        trial: true,
-        trialEndsAt: trialEndsAt.toISOString(),
-      });
-    }
 
     // Create Stripe checkout session for paid subscription
     if (!plan.priceId) {

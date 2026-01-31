@@ -31,12 +31,22 @@ async function getAuthenticatedUser() {
   
   if (!user) {
     // Auto-create user if they authenticated with Clerk but don't exist in DB yet
-    user = await prisma.user.create({
-      data: {
-        clerkId: userId,
-        email: `${userId}@placeholder.local`, // Will be updated by webhook
-      },
-    });
+    try {
+      user = await prisma.user.create({
+        data: {
+          clerkId: userId,
+          email: `${userId}@placeholder.local`, // Will be updated by webhook
+        },
+      });
+    } catch (createError) {
+      // Handle race condition - user might have been created by webhook
+      user = await prisma.user.findUnique({
+        where: { clerkId: userId },
+      });
+      if (!user) {
+        throw createError;
+      }
+    }
   }
   
   return user;
@@ -220,42 +230,22 @@ export async function deleteBridge(bridgeId: string) {
 }
 
 export async function getBridges() {
-  const user = await getAuthenticatedUser();
-  
-  const bridges = await prisma.bridge.findMany({
-    where: { userId: user.id },
-    orderBy: { createdAt: "desc" },
-  });
-  
-  // Update statuses from Docker
-  const bridgesWithStatus = await Promise.all(
-    bridges.map(async (bridge: Bridge) => {
-      if (bridge.containerId) {
-        const dockerStatus = await getContainerStatus(bridge.containerId);
-        
-        let status = bridge.status;
-        if (dockerStatus === "running" && bridge.status !== "RUNNING") {
-          status = "RUNNING";
-        } else if (dockerStatus === "exited" && bridge.status === "RUNNING") {
-          status = "STOPPED";
-        } else if (dockerStatus === "not_found" && bridge.containerId) {
-          status = "ERROR";
-        }
-        
-        if (status !== bridge.status) {
-          await prisma.bridge.update({
-            where: { id: bridge.id },
-            data: { status },
-          });
-        }
-        
-        return { ...bridge, status };
-      }
-      return bridge;
-    })
-  );
-  
-  return bridgesWithStatus;
+  try {
+    const user = await getAuthenticatedUser();
+    
+    const bridges = await prisma.bridge.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+    });
+    
+    // Skip Docker status check on serverless (Vercel) - Docker isn't available
+    // Just return the bridges with their stored status
+    return bridges;
+  } catch (error) {
+    console.error("getBridges error:", error);
+    // Return empty array instead of crashing - allows dashboard to load
+    return [];
+  }
 }
 
 export async function getBridgeLogs(bridgeId: string) {

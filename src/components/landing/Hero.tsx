@@ -43,9 +43,9 @@ export function Hero() {
                                 <ArrowRight className="w-5 h-5 ml-2" />
                             </button>
                         ) : (
-                            <SignUpButton mode="modal" forceRedirectUrl="/dashboard">
+                            <SignUpButton mode="modal" forceRedirectUrl="/subscribe">
                                 <button className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-indigo-500 to-cyan-500 px-8 py-4 text-base font-semibold text-white shadow-xl shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all hover:scale-105">
-                                    Start Free Trial
+                                    Get Started
                                     <ArrowRight className="w-5 h-5 ml-2" />
                                 </button>
                             </SignUpButton>
